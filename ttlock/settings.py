@@ -26,7 +26,7 @@ SECRET_KEY = config("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config("DEBUG", default=False, cast=bool)
 
-ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="").split(",")
+ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="localhost").split(",")
 
 
 # Application definition
@@ -123,5 +123,10 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 
-
 AUTH_USER_MODEL = "users.User"
+
+# TTLock environment variables
+TTLOCK_USERNAME = config("TTLOCK_USERNAME") # TTLock app username
+TTLOCK_PASSWORD = config("TTLOCK_PASSWORD") # TTLock app password (md5 hash)
+TTLOCK_CLIENT_ID = config("TTLOCK_CLIENT_ID") # Client id Developer Account
+TTLOCK_CLIENT_SECRET = config("TTLOCK_CLIENT_SECRET") # Client secret Developer Account
