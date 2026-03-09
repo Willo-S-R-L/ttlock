@@ -1,0 +1,51 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="it" data-theme="nord">
+    <head>
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Home | TTLock Web System</title>
+        <link rel="icon" type="image/x-icon" href="{% static 'img/ttlock.png' %}"></link>
+
+        <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
+        <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+        <link href="https://cdn.jsdelivr.net/npm/daisyui@5/themes.css" rel="stylesheet" type="text/css" />
+
+        <script src="{% static 'js/htmx.min.js' %}"></script>
+
+        <script>
+            // Check if a user theme preference is in localStorage and applies it before loading the page
+            const savedTheme = localStorage.getItem("theme");
+            savedTheme && document.documentElement.setAttribute("data-theme", savedTheme);
+        </script>
+    </head>
+
+    <body class="bg-base-100 min-h-screen flex flex-col">
+        {% include "nav.html" %}
+
+        <main class="flex-1 flex flex-col p-6">
+            <div class="card bg-base-200 px-12 py-6 flex-1 shadow-sm">
+                {% block content %}
+                {% endblock %}
+            </div>
+        </main>
+
+        {% include "footer.html" %}
+    </body>
+
+    <script>
+        // Handle click on theme toggle and ensure that the toggle is in the correct position when reloading
+        const themeController = document.querySelector(".theme-controller")
+        if (themeController) {
+            const currentTheme = document.documentElement.getAttribute("data-theme");
+            themeController.checked = (currentTheme === "business");
+
+            themeController.addEventListener("change", function (e) {
+                const theme = e.target.checked ? "business" : "nord";
+                document.documentElement.setAttribute("data-theme", theme);
+                localStorage.setItem("theme", theme);
+            });
+        }
+    </script>
+</html>
