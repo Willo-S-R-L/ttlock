@@ -6,6 +6,12 @@ from datetime import timedelta
 from web_system.models import TTLockToken
 
 
+class TTLockAPIError(Exception):
+    """Base exception for errors related to TTLock API"""
+
+    pass
+
+
 class TTLockAPI:
     """Service Class to interact with TTLock API"""
 
@@ -18,7 +24,8 @@ class TTLockAPI:
         self.client_secret = settings.TTLOCK_CLIENT_SECRET
 
     def _get_access_token(self):
-        """Retrieve the access token from the DB, refresh it if needed, or create it from stratch"""
+        """Used by public methods of this class to retrieve the access token from the DB, refresh it if needed,
+        or create it from stratch"""
 
         token = TTLockToken.objects.first()
 
@@ -72,7 +79,7 @@ class TTLockAPI:
         return token.access_token
 
     def _request(self, endpoint, method="GET", params=None, data=None):
-        """Base HTTP request used from all API functions"""
+        """Used by public methods of this class to make HTTP requests to TTLock API endpoints"""
 
         url = f"{self.BASE_URL}/{endpoint}"
 
@@ -81,11 +88,26 @@ class TTLockAPI:
         elif method == "POST":
             data.update({"clientId": self.client_id})
 
-        response = requests.request(method, url, params=params, data=data, timeout=10)
-        response.raise_for_status()
-        return response.json()
+        try:
+            response = requests.request(
+                method, url, params=params, data=data, timeout=10
+            )
+            response.raise_for_status()
+
+            # Check if API response contains error code
+            response_data = response.json()
+            if "errcode" in response_data and response_data["errcode"] != 0:
+                raise TTLockAPIError(f"TTLock API error: {response_data.get("errmsg")}")
+
+            return response_data
+
+        except requests.RequestException as e:
+            # Catch timeout, connection errors, 4xx, 5xx
+            raise TTLockAPIError(f"Communication error with TTLock server: {str(e)}")
 
     def get_lock_list(self):
+        """Method used to fetch all the locks from TTLock"""
+
         date = int(timezone.now().timestamp() * 1000)
         access_token = self._get_access_token()
 
@@ -98,4 +120,3 @@ class TTLockAPI:
                 "date": date,
             },
         )
-
