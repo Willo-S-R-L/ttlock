@@ -96,16 +96,11 @@
     {% if locks %}
         {% for lock in locks %}
             {% partial lock_card %}
-            {% partial lock_card %}
-            {% partial lock_card %}
-            {% partial lock_card %}
-            {% partial lock_card %}
-            {% partial lock_card %}
-            {% partial lock_card %}
-            {% partial lock_card %}
         {% endfor %}
     {% else %}
-        <span class="col-span-full">Nessun lock trovato...</span>
+        <div class="col-span-full text-center py-10 opacity-50">
+            <span>Nessun lock trovato...</span>
+        </div>
     {% endif %}
 {% endpartialdef %}
 
@@ -132,14 +127,37 @@
     </div>
 {% endpartialdef %}
 
+{# Partial used to automatically remove alert feedback (caused by a failed sync) after a success sync #}
+{% partialdef sync_response %}
+    <div id="api-error" hx-swap-oob="true"></div>
+    {% partial lock_grid %}
+{% endpartialdef %}
+
 {% block content %}
     <div class="flex flex-col gap-6">
-        {% if api_error %}
-            {% partial api_error_feedback %}
-        {% endif %}
+        
+        {% comment %} Same id of the OOB element {% endcomment %}
+        <div id="api-error"> 
+            {% if api_error %}
+                {% partial api_error_feedback %}
+            {% endif %}
+        </div>
 
         <div class="flex justify-between items-center">
             <h1 class="text-2xl">I tuoi lock ({{ total }})</h1>
+            <div class="tooltip tooltip-primary" data-tip="Sincronizza lock">
+                <button id="sync-btn"
+                        hx-post="{% url 'sync_locks' %}"
+                        hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+                        hx-target="#lock-grid"
+                        hx-swap="innerHTML"
+                        hx-indicator="#sync-btn, #lock-grid"
+                        class="btn btn-ghost btn-circle shadow-sm bg-base-100 [&.htmx-request_svg]:animate-spin [&.htmx-request]:pointer-events-none">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="size-6 transition-transform">
+                        <path fill-rule="evenodd" d="M15.312 11.424a5.5 5.5 0 0 1-9.201 2.466l-.312-.311h2.433a.75.75 0 0 0 0-1.5H3.989a.75.75 0 0 0-.75.75v4.242a.75.75 0 0 0 1.5 0v-2.43l.31.31a7 7 0 0 0 11.712-3.138.75.75 0 0 0-1.449-.39Zm1.23-3.723a.75.75 0 0 0 .219-.53V2.929a.75.75 0 0 0-1.5 0V5.36l-.31-.31A7 7 0 0 0 3.239 8.188a.75.75 0 1 0 1.448.389A5.5 5.5 0 0 1 13.89 6.11l.311.31h-2.432a.75.75 0 0 0 0 1.5h4.243a.75.75 0 0 0 .53-.219Z" clip-rule="evenodd" />
+                    </svg>
+                </button>
+            </div>
         </div>
 
         <div id="lock-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-8 transition-opacity [&.htmx-request]:opacity-40 [&.htmx-request]:pointer-events-none">
