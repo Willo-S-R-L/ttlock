@@ -9,7 +9,10 @@
 
     <div class="flex items-center gap-2">
         <div class="form-control hidden sm:block">
-            <input type="text" placeholder="Cerca lock..." class="input input-bordered w-24 md:w-auto" />
+            <input type="search"
+                placeholder="Cerca lock..."
+                oninput="filterLocks(this.value)"
+                class="input input-bordered w-24 md:w-auto" />
         </div>
 
         <div class="dropdown dropdown-end">
@@ -35,3 +38,13 @@
         </div>
     </div>
 </div>
+
+<script>
+    function filterLocks(query) {
+        const q = query.toLowerCase();
+        document.querySelectorAll('#lock-grid .card').forEach(card => {
+            const name = card.querySelector('.card-title').textContent.toLowerCase();
+            card.style.display = name.includes(q) ? '' : 'none';
+        });
+    }
+</script>
