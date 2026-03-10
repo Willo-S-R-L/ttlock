@@ -126,7 +126,14 @@ STATIC_URL = "static/"
 AUTH_USER_MODEL = "users.User"
 
 # TTLock environment variables
-TTLOCK_USERNAME = config("TTLOCK_USERNAME") # TTLock app username
-TTLOCK_PASSWORD = config("TTLOCK_PASSWORD") # TTLock app password (md5 hash)
-TTLOCK_CLIENT_ID = config("TTLOCK_CLIENT_ID") # Client id Developer Account
-TTLOCK_CLIENT_SECRET = config("TTLOCK_CLIENT_SECRET") # Client secret Developer Account
+TTLOCK_USERNAME = config("TTLOCK_USERNAME")  # TTLock app username
+TTLOCK_PASSWORD = config("TTLOCK_PASSWORD")  # TTLock app password (md5 hash)
+TTLOCK_CLIENT_ID = config("TTLOCK_CLIENT_ID")  # Client id Developer Account
+TTLOCK_CLIENT_SECRET = config("TTLOCK_CLIENT_SECRET")  # Client secret Developer Account
+
+
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+    }
+}
