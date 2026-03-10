@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
-from django.views.decorators.http import require_http_methods
+from django.views.decorators.http import require_http_methods, require_POST
 from django.core.cache import cache
 
 from .models import Lock
@@ -43,9 +43,7 @@ def home(request):
             # Searching in a Set is instantaneous: complexity O(1)
             locks = [lock for lock in lock_list if lock["lockId"] in user_lock_ids]
 
-        total = len(locks)
-
-        return render(request, "home.html", {"locks": locks, "total": total})
+        return render(request, "home.html", {"locks": locks, "total": len(locks)})
 
     except TTLockAPIError as e:
         context = {
@@ -55,3 +53,43 @@ def home(request):
         }
         return render(request, "home.html", context)
 
+
+@login_required
+@require_POST
+def sync_locks(request):
+    """
+    View to synchronize data saved on local DB with the updated data on TTLock DB.
+    When this view is called, the cache used for the home view is ignored
+    """
+
+    try:
+        api = TTLockAPI()
+        result = api.get_lock_list()
+
+        lock_list = result.get("list", [])
+
+        # If the user is superuser get all the locks without synchronization
+        if request.user.is_superuser:
+            locks = lock_list
+        else:
+            locks = [
+                lock
+                for lock in lock_list
+                if lock["lockAlias"].split("_")[0].lower()
+                == request.user.username.lower()
+            ]
+
+            for lock in locks:
+                Lock.objects.get_or_create(ttlock_id=lock["lockId"], owner=request.user)
+
+        return render(
+            request, "home.html#sync_response", {"locks": locks, "total": len(locks)}
+        )
+
+    except TTLockAPIError as e:
+        api_error = "Sincronizzazione con TTLock fallita. Riprova più tardi."
+        response = render(
+            request, "home.html#api_error_feedback", {"api_error": api_error}
+        )
+        response["HX-Retarget"] = "#api-error"
+        return response
