@@ -5,6 +5,8 @@ from datetime import timedelta
 
 from web_system.models import TTLockToken
 
+from enum import Enum
+
 
 class TTLockAPIError(Exception):
     """Base exception for errors related to TTLock API"""
@@ -79,14 +81,20 @@ class TTLockAPI:
         return token.access_token
 
     def _request(self, endpoint, method="GET", params=None, data=None):
-        """Used by public methods of this class to make HTTP requests to TTLock API endpoints"""
+        """
+        Used by public methods of this class to make HTTP requests to
+        TTLock API endpoints
+        """
 
         url = f"{self.BASE_URL}/{endpoint}"
+        date = int(timezone.now().timestamp() * 1000)
 
         if method == "GET":
             params.update({"clientId": self.client_id})
+            params.update({"date": date})
         elif method == "POST":
             data.update({"clientId": self.client_id})
+            data.update({"date": date})
 
         try:
             response = requests.request(
@@ -108,7 +116,6 @@ class TTLockAPI:
     def get_lock_list(self):
         """Method used to fetch all the locks from TTLock"""
 
-        date = int(timezone.now().timestamp() * 1000)
         access_token = self._get_access_token()
 
         return self._request(
@@ -117,6 +124,41 @@ class TTLockAPI:
                 "accessToken": access_token,
                 "pageNo": 1,
                 "pageSize": 20,
-                "date": date,
             },
         )
+
+    def create_passcode(self, passcode_data):
+        """Method used to create a random/custom passcode"""
+
+        class Duration(Enum):
+            monouso = 1
+            permanente = 2
+            temporanea = 3
+
+        access_token = self._get_access_token()
+
+        lock_id = passcode_data["lock_id"]
+        is_custom = passcode_data["is_custom"]
+        custom_code = passcode_data["custom_code"]
+        duration = passcode_data["duration"]
+        code_name = passcode_data["code_name"]
+        start_date = passcode_data["start_date"] or timezone.now()
+        end_date = passcode_data["end_date"]
+
+        data = {
+            "accessToken": access_token,
+            "lockId": lock_id,
+            "keyboardPwdType": Duration[duration].value,
+            "keyboardPwdName": code_name,
+            "startDate": int(start_date.timestamp()) * 1000,
+        }
+
+        if duration == "temporanea":
+            data.update({"endDate": int(end_date.timestamp()) * 1000})
+
+        if is_custom:
+            data.update({"keyboardPwd": custom_code})
+            return self._request("v3/keyboardPwd/add", method="POST", data=data)
+        else:
+            data.update({"addType": 2})
+            return self._request("v3/keyboardPwd/get", method="POST", data=data)
