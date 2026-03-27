@@ -1,31 +1,48 @@
 {% load static %}
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="it" data-theme="nord">
     <head>
         <meta charset="UTF-8" />
         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Home | TTLock Web System</title>
-        <link rel="icon" type="image/x-icon" href="{% static 'img/ttlock.png' %}"></link>
+        <link rel="icon" type="image/x-icon" href="{% static 'img/ttlock.ico' %}"></link>
 
         <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
         <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
         <link href="https://cdn.jsdelivr.net/npm/daisyui@5/themes.css" rel="stylesheet" type="text/css" />
 
         <script src="{% static 'js/htmx.min.js' %}"></script>
-
+        <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.15.8/dist/cdn.min.js"></script>
+        
         <script>
-            // Check if a user theme preference is in localStorage and applies it before loading the page
-            const savedTheme = localStorage.getItem("theme");
-            savedTheme && document.documentElement.setAttribute("data-theme", savedTheme);
+            // Every time the the page is loaded:
+            // 1. Get theme value from local storage
+            let savedTheme = localStorage.getItem('theme');
+            // 2. If the value is different from "nord" or "business" (e.g. "auto")
+            // or it's non-existent, force it to "nord" value
+            if (savedTheme !== 'nord' && savedTheme !== 'business') {
+                savedTheme = 'nord';
+                localStorage.setItem('theme', 'nord');
+            }
+            // 3. Set theme preference in data-theme
+            document.documentElement.setAttribute("data-theme", savedTheme);
         </script>
     </head>
 
-    <body class="bg-base-100 min-h-screen flex flex-col">
+    <body class="bg-base-200 min-h-screen flex flex-col">
         {% include "nav.html" %}
 
         <main class="flex-1 flex flex-col p-6">
-            <div class="card bg-base-200 px-12 py-6 flex-1 shadow-sm">
+            <div id="feedback" class="hidden has-[*]:block mb-4">
+                {% if success %}
+                    {% partial success_feedback %}
+                {% elif error %}
+                    {% partial error_feedback %}
+                {% endif %}
+            </div>
+
+            <div class="card bg-base-300 px-12 py-6 flex-1 shadow-sm">
                 {% block content %}
                 {% endblock %}
             </div>
@@ -33,19 +50,4 @@
 
         {% include "footer.html" %}
     </body>
-
-    <script>
-        // Handle clicks on theme toggle and ensure that the toggle is in the correct position when reloading the page
-        const themeController = document.querySelector(".theme-controller")
-        if (themeController) {
-            const currentTheme = document.documentElement.getAttribute("data-theme");
-            themeController.checked = (currentTheme === "business");
-
-            themeController.addEventListener("change", function (e) {
-                const theme = e.target.checked ? "business" : "nord";
-                document.documentElement.setAttribute("data-theme", theme);
-                localStorage.setItem("theme", theme);
-            });
-        }
-    </script>
 </html>
