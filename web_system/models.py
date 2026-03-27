@@ -2,7 +2,7 @@ from django.db import models
 
 
 class TTLockToken(models.Model):
-    """Access token model used to maintain it always updated"""
+    """Access token model used to maintain the token always updated"""
 
     access_token = models.CharField(max_length=64)
     refresh_token = models.CharField(max_length=64)
@@ -10,7 +10,7 @@ class TTLockToken(models.Model):
 
 
 class Lock(models.Model):
-    """Lock model used to associate locks to users"""
+    """Lock model used to associate the lock to the user (owner)"""
 
     ttlock_id = models.PositiveIntegerField(
         unique=True,
