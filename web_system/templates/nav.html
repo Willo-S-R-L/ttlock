@@ -1,6 +1,7 @@
 {% load static %}
-<div class="navbar bg-base-200 shadow-md px-4 md:px-8">
+<div class="navbar bg-base-300 shadow-md px-4 md:px-8">
     <img class="h-10 w-10" src="{% static "img/ttlock.png" %}" />
+    
     <div class="flex-1">
         <a class="text-xl font-bold tracking-tight" href="">
             <span class="text-primary">TTLock</span> Web System
@@ -10,7 +11,7 @@
     <div class="flex items-center gap-2">
         <div class="form-control hidden sm:block">
             <input type="search"
-                placeholder="Cerca lock..."
+                placeholder="Cerca..."
                 oninput="filterLocks(this.value)"
                 class="input input-bordered w-24 md:w-auto" />
         </div>
@@ -22,29 +23,78 @@
                 </div>
             </div>
 
-            <ul tabindex="0" class="menu menu-sm dropdown-content bg-base-100 rounded-box z-1 mt-3 w-56 p-2 shadow-sm border border-base-200/50 mb-2">
-                <li class="menu-title text-xs opacity-50">Utente: {{ request.user }}</li>
-                <li><a><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" /></svg> Info Account</a></li>
+            <ul tabindex="0" class="menu menu-sm dropdown-content bg-base-100 rounded-lg z-1 mt-3 w-56 p-2 shadow-sm border border-base-200/50 mb-2">
+                <li class="menu-title text-xs opacity-50 ">
+                    Utente: {{ request.user }}
+                </li>
+                
+                <li>
+                    <a>
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke-width="1.5"
+                            stroke="currentColor"
+                            class="size-4">
+                                <path stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+                        </svg>
+                        Info Account
+                    </a>
+                </li>
+
                 <hr class="my-2 opacity-10" />
             
                 <div class="flex flex-row items-center justify-between py-2 px-3">
                     <span class="text-xs font-medium uppercase tracking-wider opacity-60">Modalità scura</span>
-                    <input type="checkbox" value="business" class="toggle toggle-primary theme-controller rounded-full [&::before]:rounded-full" />
+                    <input type="checkbox"
+                            class="toggle toggle-primary rounded-full [&::before]:rounded-full"
+                            x-data="{ theme: localStorage.getItem('theme') || 'nord' }"
+                            :checked="theme === 'business'"
+                            @change="
+                                theme = $el.checked ? 'business' : 'nord';
+                                document.documentElement.setAttribute('data-theme', theme);
+                                localStorage.setItem('theme', theme);
+                            "/>
                 </div>
 
                 <hr class="my-2 opacity-10" />
-                <li><a class="text-error font-semibold"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" /></svg> Logout</a></li>
+
+                <li>
+                    <a class="text-error font-semibold">
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke-width="1.5"
+                            stroke="currentColor"
+                            class="size-4">
+                            <path stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
+                        </svg>
+                        Logout
+                    </a>
+                </li>
             </ul>
         </div>
     </div>
 </div>
 
 <script>
+    // Add filter functionality to search bar based on the lock name 
     function filterLocks(query) {
         const q = query.toLowerCase();
-        document.querySelectorAll('#lock-grid .card').forEach(card => {
+        const cards = document.querySelectorAll('#lock-grid .card')
+        let visibleCount = 0;
+        
+        cards.forEach(card => {
             const name = card.querySelector('.card-title').textContent.toLowerCase();
-            card.style.display = name.includes(q) ? '' : 'none';
-        });
+            const visible = name.includes(q);
+            card.style.display = visible ? '' : 'none';
+            if (visible) visibleCount++;
+        })
+
+        document.getElementById('no-results').classList.toggle('hidden', visibleCount > 0);
     }
 </script>
